@@ -1,0 +1,1877 @@
+<template>
+  <div id="craftDetail"
+    class="indexMain"
+    v-loading="loading">
+    <div class="module">
+      <div class="titleCtn"
+        style="display: flex;justify-content: space-between;align-items: center;">
+        <span class="title hasBorder">工艺单信息</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn flex3">
+            <span class="label">工艺编号：</span>
+            <span class="text">{{data.craft_code}}</span>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">名称：</div>
+            <div class="text">{{ZDYMC}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">大身规格：</div>
+            <div class="text">{{DSGG}}cm</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">大身克重：</div>
+            <div class="text">{{DSKZ}}g</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">备注信息：</div>
+            <div class="text"
+              :class="{'blue':desc}">{{desc?desc:'无'}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module"
+      v-if="imgSrc.length>0">
+      <div class="titleCtn">
+        <span class="title hasBorder">图片信息</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">图片信息：</span>
+            <div class="imgCtn">
+              <el-image style="width:150px;height:150px;margin-right:16px"
+                v-for="(item,index) in imgSrc"
+                :key="index"
+                :src="item.image_url || ''"
+                :preview-src-list="[item.image_url]">
+              </el-image>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">原料经向</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">配色方案：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in warpInfo.color_data"
+                :key="index">
+                <span class="circle">{{index+1}}</span>
+                <span>{{item.color_name}}：</span>
+                <div class="colorBox"
+                  v-for="(itemColor,indexColor) in item.color_scheme"
+                  :key="indexColor">
+                  <span class="colorText"
+                    :style="{'background':itemColor.value}">{{filterMethods(indexColor)}}</span>
+                  <span class="name">{{itemColor.name}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">主要原料：</span>
+            <div class="text">
+              <span>{{yarn.yarnWarp.material_name}}</span>
+              <div class="colorBox"
+                v-for="(item,index) in yarn.yarnWarp.apply"
+                :key="index">
+                <span class="colorText">{{filterMethods(item)}}</span>
+                <span class="name">{{colorWeight.warp[item]==='NaN'?'0g':colorWeight.warp[item] + 'g'}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="yarn.yarnOtherWarp.length>0">
+          <div class="colCtn">
+            <span class="label">次要原料：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in yarn.yarnOtherWarp"
+                :key="index">
+                <span>{{item.material_name}}</span>
+                <div class="colorBox"
+                  v-for="(item,index) in item.apply"
+                  :key="index">
+                  <span class="colorText">{{filterMethods(item)}}</span>
+                  <span class="name">{{colorWeight.warp[item]==='NaN'?'0g':colorWeight.warp[item] + 'g'}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="material.materialWarp.length>0">
+          <div class="colCtn">
+            <span class="label">辅助原料：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in material.materialWarp"
+                :key="index">
+                <span>{{item.material_name}}</span>
+                <span style="margin-left:16px">数量({{item.number}})</span>
+                <div class="colorBox"
+                  v-for="(item,index) in item.apply"
+                  :key="index">
+                  <el-tooltip class="item"
+                    effect="dark"
+                    :content="item.weight.toFixed(1)+'g'"
+                    placement="top">
+                    <span class="colorText">{{filterMethods(item.number)}}</span>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">经向排列：</span>
+            <div class="tableCtns">
+              <hot-table :settings="tableData.warp"
+                ref="warp">
+              </hot-table>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="warpInfo.back_status===1">
+          <div class="colCtn">
+            <span class="label">经向反面：</span>
+            <div class="tableCtns">
+              <hot-table :settings="tableData.warpBack"
+                ref="warpBack">
+              </hot-table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">整经工艺</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn flex3">
+            <span class="label">整经头纹：</span>
+            <div class="text">{{warpInfo.weft}}根</div>
+          </div>
+          <div class="colCtn flex3">
+            <span class="label">边型：</span>
+            <div class="text">{{warpInfo.side || '无'}}</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn flex3">
+            <span class="label">整经门幅：</span>
+            <div class="text">{{warpInfo.width?warpInfo.width + 'cm':'无'}}</div>
+          </div>
+          <div class="colCtn flex3">
+            <span class="label">机型：</span>
+            <div class="text">{{warpInfo.machine || '无'}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">穿综筘工艺</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn flex3">
+            <div class="label">筘号：</div>
+            <div class="text">{{warpInfo.reed?warpInfo.reed+'筘':'无'}}</div>
+          </div>
+          <div class="colCtn flex3">
+            <div class="label">穿筘法：</div>
+            <div class="text">{{warpInfo.reed_method?warpInfo.reed_method+'根/筘':'无'}}</div>
+          </div>
+          <div class="colCtn flex3">
+            <div class="label">综页：</div>
+            <div class="text">{{warpInfo.sum_up?warpInfo.sum_up + '页':'无'}}</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn flex3">
+            <div class="label">筘幅：</div>
+            <div class="text">{{warpInfo.reed_width+'cm'}}</div>
+          </div>
+          <div class="colCtn flex3">
+            <div class="label">筘幅说明：</div>
+            <div class="text">{{warpInfo.reed_width_data?warpInfo.reed_width_data:'无'}}</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn"
+            style="display:block">
+            <div class="label">纹版图：</div>
+            <div class="GLCtn"
+              v-for="(item1,index1) in GLShow"
+              :key="index1"
+              style="overflow:hidden">
+              <div class="mark"
+                style="position:relative">{{alphabet[index1]}}：
+                <span style="position:absolute;color:#1a95ff;font-size:12px;bottom:-1.3em;left:0em;cursor:pointer"
+                  @click="showGL(index1)">预览</span>
+              </div>
+              <div v-for="(item2,index2) in item1"
+                :key="index2"
+                class="deltaCtn">
+                <div class="leftCtn">
+                  <span>{{GLXuhao[index1] ? GLXuhao[index1][index2] : ''}}</span>
+                </div>
+                <div class="rightCtn">
+                  <el-input placeholder="数字间用逗号分隔"
+                    v-model="item2[0]"
+                    disabled></el-input>
+                  <el-input placeholder="数字间用逗号分隔"
+                    v-model="item2[1]"
+                    disabled></el-input>
+                  <el-input placeholder=""
+                    v-model="item2[2]"
+                    disabled></el-input>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-if="GLRepeat.length>0">
+          <div class="colCtn"
+            style="display:block">
+            <div class="label">
+              <span class="text">纹版图循环</span>
+            </div>
+            <div style="position:relative"
+              v-for="(item,index) in GLRepeat"
+              :key="index">
+              <div style="position:absolute;line-height:32px;color:rgba(0,0,0,0.65)">{{alphabet[index]}}：</div>
+              <div style="display:block;padding-left:32px;margin:12px 0"
+                v-for="(itemChild,indexChild) in item"
+                :key="indexChild">
+                <span style="margin:0 20px;color:#666">{{itemChild.start}}到{{itemChild.end}}<span style="margin:0 5px"></span>✖{{itemChild.repeat}}遍</span>
+                <span style="margin:0 20px;color:#666"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">穿综循环：</div>
+            <div class="treeCtn">
+              <div class="node"
+                v-for="(item1,index1) in PM"
+                :key="index1">
+                <div class="numbers">{{romanNum[index1]}}</div>
+                <div class="lineCol"
+                  v-show="PMFlag === 'complex'"></div>
+                <div class="nodeBox">
+                  <div class="box box1">
+                    <el-input v-if="PMFlag === 'normal'"
+                      placeholder="根数"
+                      disabled
+                      v-model="item1.number">
+                    </el-input>
+                    <el-input v-if="PMFlag === 'complex'"
+                      placeholder="总数"
+                      v-model="item1.total"
+                      disabled>
+                    </el-input>
+                    <em class="unit right">根</em>
+                  </div>
+                  <div class="box box2">
+                    <div class="lines">
+                      <div class="line1">
+                        <el-input v-if="PMFlag === 'normal'"
+                          placeholder="穿综循环"
+                          v-model="item1.value"
+                          disabled>
+                        </el-input>
+                      </div>
+                      <div class="line2">
+                        <em class="unit left">×</em>
+                        <el-input style="padding-left:5px;box-sizing:border-box;"
+                          placeholder="遍数"
+                          v-model="item1.repeat"
+                          disabled>
+                        </el-input>
+                        <em class="unit right">遍</em>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="nodeChild"
+                  v-show="PMFlag === 'complex'"
+                  v-for="(item2,index2) in item1.children"
+                  :key="index2">
+                  <div class="nodeBox">
+                    <div class="lineRow"></div>
+                    <div class="box box1">
+                      <el-input placeholder="根数"
+                        disabled
+                        v-model="item2.number">
+                      </el-input>
+                      <em class="unit right">根</em>
+                    </div>
+                    <div class="box box2">
+                      <div class="lines"
+                        v-for="(item3,index3) in item2.children"
+                        :key="index3">
+                        <div class="line1">
+                          <el-input placeholder="穿综循环"
+                            disabled
+                            v-model="item3.value">
+                          </el-input>
+                        </div>
+                        <div class="line2">
+                          <em class="unit left">×</em>
+                          <el-input style="padding-left:5px;box-sizing:border-box;"
+                            placeholder="遍数"
+                            disabled
+                            v-model="item3.repeat">
+                          </el-input>
+                          <em class="unit right">遍</em>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">穿综备注：</div>
+            <div class="text"> {{remarkPM?remarkPM:'无'}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">织造工艺</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">组织法：</div>
+            <div class="text">{{weftInfo.organization || ''}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">机上坯幅：</div>
+            <div class="text">{{weftInfo.peifu?weftInfo.peifu + 'cm':'无'}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">坯幅说明：</div>
+            <div class="text">{{weftInfo.peifu_data?weftInfo.peifu_data:'无'}}</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">上齿牙：</div>
+            <div class="text">{{weftInfo.shangchiya?weftInfo.shangchiya+'牙':'无'}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">下齿牙：</div>
+            <div class="text">{{weftInfo.xiachiya?weftInfo.xiachiya+'牙':'无'}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">纬密：</div>
+            <div class="text">{{((weftInfo.total / (weftInfo.neichang))).toFixed(2)}}梭/cm</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">内长：</div>
+            <div class="text">{{weftInfo.neichang+'cm'}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">让位：</div>
+            <div class="text">{{weftInfo.rangwei+'cm'}}</div>
+          </div>
+          <div class="colCtn">
+            <div class="label">总计：</div>
+            <div class="text">{{weftInfo.total+'根'}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">原料纬向</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">配色方案：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in weftInfo.color_data"
+                :key="index">
+                <span class="circle">{{index+1}}</span>
+                <span>{{item.color_name}}：</span>
+                <div class="colorBox"
+                  v-for="(itemColor,indexColor) in item.color_scheme"
+                  :key="indexColor">
+                  <span class="colorText"
+                    :style="{'background':itemColor.value}">{{filterMethods(indexColor)}}</span>
+                  <span class="name">{{itemColor.name}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">主要原料：</span>
+            <div class="text">
+              <span>{{yarn.yarnWeft.material_name}}</span>
+              <div class="colorBox"
+                v-for="(item,index) in yarn.yarnWeft.apply"
+                :key="index">
+                <span class="colorText">{{filterMethods(item)}}</span>
+                <span class="name">{{colorWeight.weft[item]==='NaN'?'0g':colorWeight.weft[item] + 'g'}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="yarn.yarnOtherWeft.length>0">
+          <div class="colCtn">
+            <span class="label">次要原料：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in yarn.yarnOtherWeft"
+                :key="index">
+                <span>{{item.material_name}}</span>
+                <div class="colorBox"
+                  v-for="(item,index) in item.apply"
+                  :key="index">
+                  <span class="colorText">{{filterMethods(item)}}</span>
+                  <span class="name">{{colorWeight.weft[item]==='NaN'?'0g':colorWeight.weft[item] + 'g'}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="material.materialWeft.length>0">
+          <div class="colCtn">
+            <span class="label">辅助原料：</span>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in material.materialWeft"
+                :key="index">
+                <span>{{item.material_name}}</span>
+                <span style="margin-left:16px">数量({{item.number}})</span>
+                <div class="colorBox"
+                  v-for="(item,index) in item.apply"
+                  :key="index">
+                  <el-tooltip class="item"
+                    effect="dark"
+                    :content="item.weight.toFixed(1)+'g'"
+                    placement="top">
+                    <span class="colorText">{{filterMethods(item.number)}}</span>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <span class="label">纬向排列：</span>
+            <div class="tableCtns">
+              <hot-table :settings="tableData.weft"
+                ref="weft">
+              </hot-table>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="weftInfo.back_status===1">
+          <div class="colCtn">
+            <span class="label">纬向反面：</span>
+            <div class="tableCtns">
+              <hot-table :settings="tableData.weftBack"
+                ref="weftBack">
+              </hot-table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="module">
+      <div class="titleCtn">
+        <span class="title hasBorder">其他信息</span>
+      </div>
+      <div class="detailCtn">
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">物料系数：</div>
+            <div class="lineCtn">
+              <div class="line"
+                v-for="(item,index) in coefficient"
+                :key="index">{{item.name}}：{{item.value}}g
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">产品净重：</div>
+            <div class="text blue">{{weight}}g</div>
+          </div>
+        </div>
+        <div class="rowCtn">
+          <div class="colCtn">
+            <div class="label">仿真图像：
+            </div>
+            <div class="btnList">
+              <div class="button"
+                v-for="(item,index) in warpInfo.color_data"
+                :key="index"
+                :class="{'active':index===selectColour}"
+                @click="getColour(index)">{{item.color_name}}</div>
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          style="position:relative"
+          v-show="selectColour!==-1">
+          <span style="position: absolute;
+              left: 0px;
+              top: -1em;
+              color: rgb(26, 149, 255);
+              cursor: pointer;
+              right: 0;
+              margin: auto;
+              text-align: center;"
+            @click="uploadImg">上传当前配色图片</span>
+          <div class="ColCtn"
+            style="width:100%">
+            <div class="canvasCtn">
+              <div class="mark"
+                v-show="warpInfo.back_status===1||weftInfo.back_status===1">
+                <span>正面</span>
+              </div>
+              <canvas ref="myCanvas"
+                style="display:none"
+                width="2400"
+                :height="canvasHeight"></canvas>
+              <img ref="img"
+                @mousedown.prevent="showMagnifier=true"
+                @mousemove="enlargeImg($event)"
+                @mouseup="showMagnifier=false"
+                :style="{'height':canvasHeight/4 + 'px'}"
+                :class="{'cursorMagnifier':showMagnifier}"
+                src="" />
+              <canvas class="floatRightTop"
+                ref="magnifier"
+                width="200"
+                height="200" />
+            </div>
+          </div>
+        </div>
+        <div class="rowCtn"
+          v-show="selectColour!==-1&&(warpInfo.back_status===1||weftInfo.back_status===1)">
+          <div class="ColCtn"
+            style="width:100%">
+            <div class="canvasCtn">
+              <div class="mark">
+                <span>反面</span>
+              </div>
+              <canvas ref="myCanvasBack"
+                style="display:none"
+                width="2400"
+                :height="canvasHeight">
+              </canvas>
+              <!-- canvas转图像的容器 -->
+              <img ref="imgBack"
+                @mousedown.prevent="showMagnifierBack=true"
+                @mousemove="enlargeImg($event,'back')"
+                @mouseup="showMagnifierBack=false"
+                :style="{'height':canvasHeight/4 + 'px'}"
+                :class="{'cursorMagnifier':showMagnifierBack}"
+                src="" />
+              <!-- 利用canvas实现放大镜的容器 -->
+              <canvas class="floatRightTop"
+                ref="magnifierBack"
+                width="200"
+                height="200" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="popup"
+      v-show="showGLFlag">
+      <div class="main">
+        <div class="title">
+          <div class="text">预览纹版图</div>
+          <i class="el-icon-close"
+            @click="showGLFlag=false"></i>
+        </div>
+        <div class="content">
+          <div class="GLCtns">
+            <div class="rowLine"
+              v-for="(item,index) in GLYulan"
+              :key="index">
+              <div class="col"
+                v-for="(itemChild,indexChild) in item"
+                :key="indexChild"
+                :class="{'black':itemChild===1,'white':itemChild===0}"></div>
+            </div>
+          </div>
+        </div>
+        <div class="opr">
+          <div class="btn btnGray"
+            @click="showGLFlag = false">取消</div>
+          <a href="#order"
+            class="btn btnBlue"
+            @click="showGLFlag = false">确定</a>
+        </div>
+      </div>
+    </div>
+    <div class="popup"
+      style="display:flex;align-items:center;justify-content:center;"
+      v-if="showImageLoading">
+      <img :src="showImageUrl">
+    </div>
+    <div class="bottomFixBar">
+      <div class="main">
+        <div class="btnCtn">
+          <div class="btn btnGray"
+            @click="$router.go(-1)">返回</div>
+          <div class="btn btnOrange"
+            @click="()=>{$router.push('/craft/craftUpdate/' + craftId)}">修改</div>
+          <div class="btn btnBlue"
+            @click="$openUrl('/craftTable/' + craftId)">打印</div>
+          <div class="btn btnBlue"
+            @click="goPDF">转为PDF</div>
+          <div class="btn btnRed"
+            @click="deleteCraft">删除</div>
+        </div>
+      </div>
+    </div>
+    <!-- <div v-show="show3D"
+      id="threeCtn"
+      style="position:fixed;left:0;right:50%;top:0;bottom:50%;background:rgba(0,0,0,0.8);z-index:999;"></div> -->
+  </div>
+</template>
+
+<script>
+import { craft, getToken } from '@/assets/js/api.js'
+import { HotTable } from '@handsontable/vue'
+import enCH from '@/assets/js/language.js'
+import Handsontable from 'handsontable'
+import 'handsontable/dist/handsontable.full.css'
+Handsontable.languages.registerLanguageDictionary(enCH) // 注册中文字典
+export default {
+  components: {
+    HotTable
+  },
+  data () {
+    return {
+      showImageLoading: false,
+      showImageUrl: require('../../assets/image/craft/loading.png'),
+      token: '',
+      imgSrc: [],
+      showGLFlag: false,
+      GLYulan: [], // 预览纹版图
+      camera: null,
+      scene: null,
+      renderer: null,
+      mesh: null,
+      controls: null,
+      show3D: true,
+      weftCmp: '1',
+      loading: true,
+      data: [], // 有多张工艺单的时候保存原始数据
+      craftId: '', // 记录一下工艺单id用于删除接口
+      warpInfo: {
+        color_data: [],
+        weft: null, // 总头纹
+        side_id: null, // 边形
+        width: null, // 整经门幅
+        machine_id: null, // 机型
+        reed: null, // 筘号
+        reed_method: null, // 穿筘法
+        reed_width: null, // 筘幅
+        reed_width_data: null, // 筘幅说明
+        sum_up: null, // 综页
+        drafting_method: null // 穿综法
+        // additional_data: null// 穿综法备注
+      },
+      weftInfo: {
+        color_data: [],
+        organization_id: null, // 组织法
+        peifu: null, // 胚服
+        peifu_data: null, // 胚幅说明
+        weimi: null, // 纬密
+        shangchiya: null, // 上齿牙
+        xiachiya: null, // 下齿牙
+        neichang: null, // 内长
+        rangwei: null, // 让位
+        total: null // 总计
+      },
+      yarn: {
+        yarnWarp: {
+          material_name: '',
+          apply: []
+        },
+        yarnWeft: {
+          material_name: '',
+          apply: []
+        },
+        yarnOtherWarp: [],
+        yarnOtherWeft: []
+      },
+      material: {
+        materialWarp: [],
+        materialWeft: []
+      },
+      tableData: {
+        warp: {
+          data: [
+            [1],
+            [null],
+            [null],
+            [null],
+            [null],
+            [null]
+          ],
+          rowHeaders: (index) => {
+            let headerArr = ['序号', '主/夹', '根数', '合并项', '合并项', '纹版图']
+            return `<div style="height:38px;line-height:38px;color:#666;display:table-row">${headerArr[index]}</div>`
+          },
+          rowHeaderWidth: 80,
+          minCols: 1,
+          autoColumnSize: true, // 自适应宽度
+          cells: (row, col, prop) => {
+            var cellProperties = {}
+            cellProperties.readOnly = true
+            cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
+              // 清空节点并重新渲染
+              Handsontable.dom.empty(td)
+              let node = document.createElement('DIV')
+              let CSS = td.style
+              node.innerText = value
+              td.appendChild(node)
+              // 设置样式
+              CSS.color = '#666'
+              CSS.width = '38px'
+              CSS.height = '38px'
+              CSS.lineHeight = '38px'
+              CSS.textAlign = 'center'
+              if (row === 0) {
+                CSS.background = '#F0F0F0'
+              }
+              return td
+            }
+            return cellProperties
+          },
+          contextMenu: false,
+          className: 'handsontable',
+          licenseKey: 'non-commercial-and-evaluation', // 申明非商业用途
+          width: '100%',
+          height: 250,
+          mergeCells: []
+        },
+        warpBack: {
+          data: [
+            [1],
+            [null],
+            [null],
+            [null],
+            [null],
+            [null]
+          ],
+          rowHeaders: (index) => {
+            let headerArr = ['序号', '主/夹', '根数', '合并项', '合并项', '纹版图']
+            return `<div style="height:38px;line-height:38px;color:#666;display:table-row">${headerArr[index]}</div>`
+          },
+          rowHeaderWidth: 80,
+          minCols: 1,
+          autoColumnSize: true, // 自适应宽度
+          cells: (row, col, prop) => {
+            var cellProperties = {}
+            cellProperties.readOnly = true
+            cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
+              // 清空节点并重新渲染
+              Handsontable.dom.empty(td)
+              let node = document.createElement('DIV')
+              let CSS = td.style
+              node.innerText = value
+              td.appendChild(node)
+              // 设置样式
+              CSS.color = '#666'
+              CSS.width = '38px'
+              CSS.height = '38px'
+              CSS.lineHeight = '38px'
+              CSS.textAlign = 'center'
+              if (row === 0) {
+                CSS.background = '#F0F0F0'
+              }
+              return td
+            }
+            return cellProperties
+          },
+          contextMenu: false,
+          className: 'handsontable',
+          licenseKey: 'non-commercial-and-evaluation', // 申明非商业用途
+          width: '100%',
+          height: 250,
+          mergeCells: []
+        },
+        weft: {
+          data: [
+            [1],
+            [null],
+            [null],
+            [null],
+            [null],
+            [null]
+          ],
+          rowHeaders: (index) => {
+            let headerArr = ['序号', '主/夹', '根数', '合并项', '合并项', '纹版图']
+            return `<div style="height:38px;line-height:38px;color:#666;display:table-row">${headerArr[index]}</div>`
+          },
+          rowHeaderWidth: 80,
+          minCols: 1,
+          autoColumnSize: true, // 自适应宽度
+          cells: (row, col, prop) => {
+            var cellProperties = {}
+            cellProperties.readOnly = true
+            cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
+              // 清空节点并重新渲染
+              Handsontable.dom.empty(td)
+              let node = document.createElement('DIV')
+              let CSS = td.style
+              node.innerText = value
+              td.appendChild(node)
+              // 设置样式
+              CSS.color = '#666'
+              CSS.width = '38px'
+              CSS.height = '38px'
+              CSS.lineHeight = '38px'
+              CSS.textAlign = 'center'
+              if (row === 0) {
+                CSS.background = '#F0F0F0'
+              }
+              return td
+            }
+            return cellProperties
+          },
+          contextMenu: false,
+          className: 'handsontable',
+          licenseKey: 'non-commercial-and-evaluation', // 申明非商业用途
+          width: '100%',
+          height: 250,
+          mergeCells: []
+        },
+        weftBack: {
+          data: [
+            [1],
+            [null],
+            [null],
+            [null],
+            [null],
+            [null]
+          ],
+          rowHeaders: (index) => {
+            let headerArr = ['序号', '主/夹', '根数', '合并项', '合并项', '纹版图']
+            return `<div style="height:38px;line-height:38px;color:#666;display:table-row">${headerArr[index]}</div>`
+          },
+          rowHeaderWidth: 80,
+          minCols: 1,
+          autoColumnSize: true, // 自适应宽度
+          cells: (row, col, prop) => {
+            var cellProperties = {}
+            cellProperties.readOnly = true
+            cellProperties.renderer = function (instance, td, row, col, prop, value, cellProperties) {
+              // 清空节点并重新渲染
+              Handsontable.dom.empty(td)
+              let node = document.createElement('DIV')
+              let CSS = td.style
+              node.innerText = value
+              td.appendChild(node)
+              // 设置样式
+              CSS.color = '#666'
+              CSS.width = '38px'
+              CSS.height = '38px'
+              CSS.lineHeight = '38px'
+              CSS.textAlign = 'center'
+              if (row === 0) {
+                CSS.background = '#F0F0F0'
+              }
+              return td
+            }
+            return cellProperties
+          },
+          contextMenu: false,
+          className: 'handsontable',
+          licenseKey: 'non-commercial-and-evaluation', // 申明非商业用途
+          width: '100%',
+          height: 250,
+          mergeCells: []
+        }
+      },
+      PMFlag: 'normal',
+      PM: [{
+        value: '', // 循环的值，用逗号分割
+        repeat: '', // 循环次数
+        number: '', // 纱线根数
+        GL: '', // 高级穿综法选纹版图
+        total: 0, // 高级穿综法统计值
+        children: [{
+          number: '',
+          children: [{
+            value: '',
+            repeat: ''
+          }]
+        }]
+      }],
+      remarkPM: '',
+      // GL:graphic layout 纹版图缩写
+      GL: [[['', '', '']]],
+      GLFlag: 'normal',
+      GLRepeat: [[{
+        start: '',
+        end: '',
+        repeat: ''
+      }]],
+      GLShow: [], // 原先的纹版图复制到这里了，原先的纹版图被结合GLRepeat改造掉了
+      GLXuhao: [],
+      alphabet: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
+      romanNum: ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ'],
+      canvasHeight: 0, // 图像高度
+      showMagnifier: false,
+      showMagnifierBack: false,
+      warpCanvas: [], // 经纬向绘图数据
+      weftCanvas: [],
+      warpCanvasBack: [], // 反面
+      weftCanvasBack: [],
+      selectColour: -1, // 选择配色方案
+      colorNumber: {
+        warp: [],
+        weft: []
+      }, // 根数信息
+      colorWeight: {
+        warp: [],
+        weft: []
+      },
+      weight: 0,
+      coefficient: [],
+      desc: '',
+      ZDYMC: '',
+      DSGG: '',
+      DSKZ: ''
+    }
+  },
+  filters: {
+    filterMaterials (arr) {
+      let str = ''
+      if (arr[0] && arr[0].component_name) {
+        arr.forEach((item) => {
+          str += item.component_name + item.number + '%' + ' / '
+        })
+        return str.substring(0, str.length - 2)
+      } else {
+        return '无'
+      }
+    }
+  },
+  methods: {
+    // 上传图片
+    uploadImg () {
+      let _this = this
+      let uploadData = {
+        craft_list_id: _this.data.id,
+        is_back: 1,
+        color_name: _this.warpInfo.color_data[_this.selectColour].color_name,
+        image_url: null
+      }
+      let uploadDataBack = {
+        craft_list_id: _this.data.id,
+        is_back: 2,
+        color_name: _this.warpInfo.color_data[_this.selectColour].color_name,
+        image_url: null
+      }
+      if (this.imgSrc.find((item) => item.colour === this.warpInfo.color_data[0].product_color)) {
+        this.$message.error('请勿重复上传')
+      }
+      // 获取图片base64链接
+      var image = _this.$refs.myCanvas.toDataURL('image/png')
+      var url = 'https://upload.qiniup.com/'
+      var xhr = new XMLHttpRequest()
+      let formData = new FormData()
+      formData.append('token', _this.token)
+      let filename = Date.parse(new Date()) + '.jpg'
+      formData.append('key', filename)
+      formData.append('file', this.dataURLtoFile(image, filename))
+      xhr.open('POST', url, true)
+      xhr.send(formData)
+      _this.loading = true
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          uploadData.image_url = 'https://zhihui.tlkrzf.com/' + JSON.parse(xhr.responseText).key
+          craft.uploadImg(uploadData).then((res) => {
+            _this.imgSrc.push(uploadData)
+            _this.$message.success('上传成功')
+            _this.loading = false
+            if (_this.warpInfo.back_status === 1 || _this.weftInfo.back_status === 1) {
+              _this.loading = true
+              var imageBack = _this.$refs.myCanvasBack.toDataURL('image/png')
+              var urlBack = 'https://upload.qiniup.com/'
+              var xhrBack = new XMLHttpRequest()
+              let formData = new FormData()
+              formData.append('token', _this.token)
+              let filename = Date.parse(new Date()) + '.jpg'
+              formData.append('key', filename)
+              formData.append('file', _this.dataURLtoFile(imageBack, filename))
+              xhrBack.open('POST', urlBack, true)
+              xhrBack.send(formData)
+              xhrBack.onreadystatechange = function () {
+                if (xhrBack.readyState === 4) {
+                  uploadDataBack.image_url = 'https://zhihui.tlkrzf.com/' + JSON.parse(xhrBack.responseText).key
+                  uploadDataBack.is_back = 2
+                  craft.uploadImg(uploadDataBack).then((res) => {
+                    _this.loading = false
+                    _this.$message.success('上传背面成功')
+                    _this.imgSrc.push(uploadDataBack)
+                  })
+                }
+              }
+            }
+          })
+        }
+      }
+    },
+    dataURLtoFile (dataurl, filename) {
+      var arr = dataurl.split(',')
+      var mime = arr[0].match(/:(.*?);/)[1]
+      var bstr = atob(arr[1])
+      var n = bstr.length
+      var u8arr = new Uint8Array(n)
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+      }
+      return new File([u8arr], filename, { type: mime })
+    },
+    // 预览纹版图
+    showGL (GLIndex) {
+      let GLArr = []
+      this.GL[GLIndex].forEach((item) => {
+        item.forEach((itemChild) => {
+          if (itemChild) {
+            GLArr.push(itemChild.split(','))
+          }
+        })
+      })
+      let max = 0
+      GLArr.forEach((item) => {
+        item.forEach((itemChild) => {
+          if (Number(itemChild) > max) {
+            max = Number(itemChild)
+          }
+        })
+      })
+      GLArr = GLArr.map((item) => {
+        return (new Array(max - 2)).fill(0).map((itemChild, indexChild) => {
+          if (item.find((itemFind) => Number(itemFind) === (indexChild + 3))) {
+            itemChild = 1
+          }
+          return itemChild
+        })
+      })
+      // 把黑白格在经向和纬向上重复四遍
+      GLArr = GLArr.map((item) => {
+        return item.concat(item).concat(item)
+      })
+      this.GLYulan = []
+      for (let i = 0; i < 3; i++) {
+        GLArr.forEach((item) => {
+          this.GLYulan.push(item)
+        })
+      }
+      this.showGLFlag = true
+    },
+    goPDF () {
+      if (this.warpInfo.color_data.length === 1) {
+        this.$openUrl('/craftTableToPDF/' + this.craftId + '/' + 0)
+      } else {
+        if (this.selectColour === -1) {
+          this.$message.error('请选择仿真图像的配色方案再预览PDF')
+          return
+        }
+        this.$openUrl('/craftTableToPDF/' + this.craftId + '/' + this.selectColour)
+      }
+    },
+    // 展平合并信息
+    getFlatTable (table, type, merge) {
+      let tableArr = JSON.parse(table)
+      let mergeTable = JSON.parse(this[type][merge])
+      // 获取完整的合并项信息
+      let firstMerge = this.getMergeInfo(mergeTable, 3, tableArr[0].length)
+      let secondMerge = this.getMergeInfo(mergeTable, 4, tableArr[0].length)
+      // 第一步，处理纹版图的合并信息
+      let GLMerge = mergeTable.filter(item => item.row === 5)
+      GLMerge.forEach((item) => {
+        for (let i = (item.col + 1); i < (item.col + item.colspan); i++) {
+          tableArr[item.row][i] = tableArr[item.row][item.col]
+        }
+      })
+      // 第二步，处理合并项的合并信息
+      let firstArr = []
+      firstMerge.forEach((item) => {
+        let temporaryStorage = [] // 临时存储合并项
+        for (let i = item.col; i < (item.col + item.colspan); i++) {
+          temporaryStorage.push({
+            order: tableArr[0][i],
+            color: tableArr[1][i],
+            number: tableArr[2][i],
+            GLorPM: tableArr[5][i]
+          })
+        }
+        for (let i = 0; i < (tableArr[item.row][item.col] || 1); i++) {
+          firstArr.push(temporaryStorage)
+        }
+      })
+      let secondArr = []
+      secondMerge.forEach((item) => {
+        let temporaryStorage = firstArr.filter((itemFilter) => {
+          return itemFilter[0].order > item.col && itemFilter[0].order <= (item.col + item.colspan)
+        })
+        for (let i = 0; i < (tableArr[item.row][item.col] || 1); i++) {
+          secondArr.push(temporaryStorage)
+        }
+      })
+      // 多维数组展平
+      let flattenArr = this.mergeArray(secondArr)
+      return flattenArr
+    },
+    // 合并项信息处理
+    getMergeInfo (mergeTable, row, length) {
+      let mergeArr = mergeTable.filter(item => item.row === row).sort((a, b) => { return a.col - b.col })
+      let saveMerge = []
+      let col = 0
+      let mergeIndex = 0
+      while (col < length) {
+        if (mergeArr[mergeIndex]) {
+          if (col < mergeArr[mergeIndex].col) {
+            for (let i = 0; i < mergeArr[mergeIndex].col - col; i++) {
+              saveMerge.push({
+                col: i + col,
+                colspan: 1,
+                row: row
+              })
+            }
+            col = mergeArr[mergeIndex].col
+          } else {
+            saveMerge.push({
+              col: mergeArr[mergeIndex].col,
+              colspan: mergeArr[mergeIndex].colspan,
+              row: row
+            })
+            col = mergeArr[mergeIndex].col + mergeArr[mergeIndex].colspan
+            mergeIndex++
+          }
+        } else {
+          for (let i = col; i < length; i++) {
+            saveMerge.push({
+              col: i,
+              colspan: 1,
+              row: row
+            })
+          }
+          col = length
+        }
+      }
+      return saveMerge
+    },
+    // 合并数组
+    mergeArray (arr, saveArr) {
+      let array = saveArr || []
+      arr.forEach((item) => {
+        if (Array.isArray(item)) {
+          this.mergeArray(item, array)
+        } else {
+          array.push(item)
+        }
+      })
+      return array
+    },
+    // 匹配主/夹名称
+    filterMethods (index) {
+      if (index === 0) {
+        return '主'
+      } else {
+        return '夹' + index
+      }
+    },
+    // 放大镜效果实现
+    enlargeImg (point, ifBack) {
+      // 放大镜效果实现
+      if (this.showMagnifier && !ifBack) {
+        const drawWidth = 50
+        const drawHeight = 50
+        let dom = this.$refs.magnifier
+        let ctx = dom.getContext('2d')
+        let img = this.$refs.img
+        ctx.clearRect(0, 0, 200, 200)
+        ctx.beginPath()
+        ctx.drawImage(img, point.offsetX * 4 - drawWidth / 2, point.offsetY * 4 - drawHeight / 2, drawWidth, drawHeight, 0, 0, drawWidth * 4, drawHeight * 4)
+      }
+      if (this.showMagnifierBack && ifBack === 'back') {
+        const drawWidth = 50
+        const drawHeight = 50
+        let dom = this.$refs.magnifierBack
+        let ctx = dom.getContext('2d')
+        let img = this.$refs.imgBack
+        ctx.clearRect(0, 0, 200, 200)
+        ctx.beginPath()
+        ctx.drawImage(img, point.offsetX * 4 - drawWidth / 2, point.offsetY * 4 - drawHeight / 2, drawWidth, drawHeight, 0, 0, drawWidth * 4, drawHeight * 4)
+      }
+    },
+    // 换颜色
+    getColour (index) {
+      // this.loading = true
+      this.showImageLoading = true
+      this.selectColour = index
+      window.scrollTo(0, 9999)
+      setTimeout(() => {
+        let warpColor = this.warpInfo.color_data[index].color_scheme
+        let weftColor = this.weftInfo.color_data[index].color_scheme
+        let canvasMatrix = []
+        let canvasMatrixBack = []
+        let warpWidth = 600 / this.warpCanvas.length * 4
+        let weftWidth = this.canvasHeight / this.weftCanvas.length
+        this.warpCanvas.reduce((totalWarp, itemWarp) => {
+          let reverseWeft = [...this.weftCanvas].reverse() // 纬向要反着画,我也不知道为啥,注意reverse会改变原数组,所以修改下指向
+          reverseWeft.reduce((totalWeft, itemWeft) => {
+            canvasMatrix.push({
+              x: totalWarp,
+              y: totalWeft,
+              width: warpWidth,
+              height: weftWidth,
+              color: itemWeft.GL.replace(/，/g, ',').split(',').find((item) => item === itemWarp.PM) ? warpColor[itemWarp.color].value : weftColor[itemWeft.color].value
+            })
+            return totalWeft + weftWidth
+          }, 0)
+          return totalWarp + warpWidth
+        }, 0)
+        this.warpCanvasBack.reduce((totalWarp, itemWarp) => {
+          let reverseWeftBack = [...this.weftCanvasBack].reverse() // 纬向要反着画,我也不知道为啥,注意reverse会改变原数组,所以修改下指向
+          reverseWeftBack.reverse().reduce((totalWeft, itemWeft) => {
+            canvasMatrixBack.push({
+              x: totalWarp,
+              y: totalWeft,
+              width: warpWidth,
+              height: weftWidth,
+              color: itemWeft.GL.replace(/，/g, ',').split(',').find((item) => item === itemWarp.PM) ? warpColor[itemWarp.color].value : weftColor[itemWeft.color].value
+            })
+            return totalWeft + weftWidth
+          }, 0)
+          return totalWarp + warpWidth
+        }, 0)
+        let dom = this.$refs.myCanvas
+        let ctx = dom.getContext('2d')
+        ctx.beginPath()
+        ctx.clearRect(0, 0, 2400, this.canvasHeight)
+        canvasMatrix.forEach((item) => {
+          ctx.fillStyle = item.color
+          ctx.fillRect(item.x, item.y, item.width, item.height)
+        })
+        let domBack = this.$refs.myCanvasBack
+        let ctxBack = domBack.getContext('2d')
+        ctxBack.beginPath()
+        ctxBack.clearRect(0, 0, 2400, this.canvasHeight)
+        canvasMatrixBack.forEach((item) => {
+          ctxBack.fillStyle = item.color
+          ctxBack.fillRect(item.x, item.y, item.width, item.height)
+        })
+        let img = this.$refs.img
+        img.src = dom.toDataURL() // canvas转图片
+        let imgBack = this.$refs.imgBack
+        imgBack.src = domBack.toDataURL()
+        this.showImageLoading = false
+        // this.loading = false
+      }, 100)
+    },
+    init (data) {
+      this.imgSrc = data.images
+      this.selectColour = -1
+      this.weight = 0
+      this.craftId = data.id
+      this.ZDYMC = data.title
+      this.DSGG = data.size
+      this.DSKZ = data.weight
+      this.colorWeight = {
+        warp: [],
+        weft: []
+      }
+      this.colorNumber = {
+        warp: [],
+        weft: []
+      }
+      this.warpInfo = data.warp_data
+      this.weftInfo = data.weft_data
+      this.weftCmp = this.warpInfo.weight_calculate_formula
+      this.yarn.yarnWarp = this.warpInfo.material_data.find((item) => item.type_material === 1)
+      this.yarn.yarnWeft = this.weftInfo.material_data.find((item) => item.type_material === 1)
+      this.yarn.yarnOtherWarp = this.warpInfo.material_data.filter((item) => item.type_material === 2)
+      this.yarn.yarnOtherWeft = this.weftInfo.material_data.filter((item) => item.type_material === 2)
+      this.material.materialWarp = this.warpInfo.assist_material
+      this.material.materialWeft = this.weftInfo.assist_material
+      this.coefficient = data.yarn_coefficient
+      this.desc = data.desc
+      this.tableData.warp.data = JSON.parse(this.warpInfo.warp_rank).map((item, index) => {
+        return index !== 1 ? item : item.map((itemJia) => { return this.filterMethods(itemJia) })
+      })
+      this.tableData.weft.data = JSON.parse(this.weftInfo.weft_rank).map((item, index) => {
+        return index !== 1 ? item : item.map((itemJia) => { return this.filterMethods(itemJia) })
+      })
+      this.tableData.warpBack.data = JSON.parse(this.warpInfo.warp_rank_back).map((item, index) => {
+        return index !== 1 ? item : item.map((itemJia) => { return this.filterMethods(itemJia) })
+      })
+      this.tableData.weftBack.data = JSON.parse(this.weftInfo.weft_rank_back).map((item, index) => {
+        return index !== 1 ? item : item.map((itemJia) => { return this.filterMethods(itemJia) })
+      })
+      this.tableData.warp.mergeCells = JSON.parse(this.warpInfo.merge_data)
+      this.tableData.weft.mergeCells = JSON.parse(this.weftInfo.merge_data)
+      this.tableData.warpBack.mergeCells = JSON.parse(this.warpInfo.merge_data_back)
+      this.tableData.weftBack.mergeCells = JSON.parse(this.weftInfo.merge_data_back)
+      this.GLShow = this.$clone(data.draft_method.GL)
+      this.GLFlag = data.draft_method.GLFlag
+      this.PM = data.draft_method.PM
+      this.PMFlag = data.draft_method.PMFlag
+      this.remarkPM = data.draft_method.desc
+      this.GLRepeat = this.$clone(data.draft_method.GLRepeat) || []
+      this.GLRepeat.forEach((item) => {
+        let addNum = 0
+        item.forEach((itemChild) => {
+          itemChild.start += addNum
+          itemChild.end += addNum
+          addNum += (itemChild.end - itemChild.start + 1) * (itemChild.repeat - 1)
+        })
+      })
+      // 将纹版图循环补充完整
+      // 例如1-2循环2次，5-6循环两次，补充3-4循环1次进去
+      let GLRepeatComplete = []
+      if (this.GLRepeat.length > 0 && !this.GLRepeat[0][0].start) {
+        this.GLRepeat = []
+      }
+      this.GLRepeat.forEach((item, index) => {
+        GLRepeatComplete.push([])
+        let start = 1
+        item.forEach((itemChild) => {
+          if (itemChild.start - start > 0) {
+            GLRepeatComplete[index].push({
+              start: start,
+              end: itemChild.start - 1,
+              repeat: 1
+            })
+          }
+          GLRepeatComplete[index].push(itemChild)
+          start = itemChild.end + 1
+        })
+        if (this.GLShow[index].length >= start) {
+          GLRepeatComplete[index].push({
+            start: start,
+            end: this.GLShow[index].length,
+            repeat: 1
+          })
+        }
+      })
+      // 如果没有纹板图循环，直接生成一个GLRepeatComplete
+      if (this.GLRepeat.length === 0) {
+        this.GLShow.forEach((item) => {
+          GLRepeatComplete.push([{
+            start: 1,
+            end: item.length,
+            repeat: 1
+          }])
+        })
+      }
+      // 序号计算
+      GLRepeatComplete.forEach((item, index) => {
+        this.GLXuhao.push([])
+        let addNum = 0
+        item.forEach((itemChild) => {
+          for (let i = itemChild.start; i <= itemChild.end; i++) {
+            this.GLXuhao[index].push(i + addNum)
+          }
+          addNum += (itemChild.end - itemChild.start + 1) * (itemChild.repeat - 1)
+        })
+      })
+      GLRepeatComplete.forEach((item, index) => {
+        this.GL[index] = []
+        item.forEach((itemChild) => {
+          for (let j = 0; j < itemChild.repeat; j++) {
+            for (let i = itemChild.start; i <= itemChild.end; i++) {
+              this.GL[index].push(this.GLShow[index][i - 1])
+            }
+          }
+        })
+      })
+      // 计算克重信息
+      let arrWarp = JSON.parse(this.warpInfo.warp_rank).slice(1, 5)
+      this.tableData.warp.mergeCells.forEach((item) => {
+        if (item.row === 3 || item.row === 4) {
+          for (let i = (item.col + 1); i < (item.col + item.colspan); i++) {
+            arrWarp[item.row - 1][i] = arrWarp[item.row - 1][item.col]
+          }
+        }
+      })
+      let arrWeft = JSON.parse(this.weftInfo.weft_rank).slice(1, 5)
+      this.tableData.weft.mergeCells.forEach((item) => {
+        if (item.row === 3 || item.row === 4) {
+          for (let i = (item.col + 1); i < (item.col + item.colspan); i++) {
+            arrWeft[item.row - 1][i] = arrWeft[item.row - 1][item.col]
+          }
+        }
+      })
+      let arrWarpBack = JSON.parse(this.warpInfo.warp_rank_back).slice(1, 5)
+      this.tableData.warpBack.mergeCells.forEach((item) => {
+        if (item.row === 3 || item.row === 4) {
+          for (let i = (item.col + 1); i < (item.col + item.colspan); i++) {
+            arrWarpBack[item.row - 1][i] = arrWarpBack[item.row - 1][item.col]
+          }
+        }
+      })
+      let arrWeftBack = JSON.parse(this.weftInfo.weft_rank_back).slice(1, 5)
+      this.tableData.weftBack.mergeCells.forEach((item) => {
+        if (item.row === 3 || item.row === 4) {
+          for (let i = (item.col + 1); i < (item.col + item.colspan); i++) {
+            arrWeftBack[item.row - 1][i] = arrWeftBack[item.row - 1][item.col]
+          }
+        }
+      })
+      for (let i = 0; i < arrWarp[0].length; i++) {
+        const x = arrWarp[1][i] ? arrWarp[1][i] : 1
+        const y = arrWarp[2][i] ? arrWarp[2][i] : 1
+        const z = arrWarp[3][i] ? arrWarp[3][i] : 1
+        this.colorNumber.warp[arrWarp[0][i]] = this.colorNumber.warp[arrWarp[0][i]] ? this.colorNumber.warp[arrWarp[0][i]] : 0
+        this.colorNumber.warp[arrWarp[0][i]] += x * y * z
+      }
+      for (let i = 0; i < arrWeft[0].length; i++) {
+        const x = arrWeft[1][i] ? arrWeft[1][i] : 1
+        const y = arrWeft[2][i] ? arrWeft[2][i] : 1
+        const z = arrWeft[3][i] ? arrWeft[3][i] : 1
+        this.colorNumber.weft[arrWeft[0][i]] = this.colorNumber.weft[arrWeft[0][i]] ? this.colorNumber.weft[arrWeft[0][i]] : 0
+        this.colorNumber.weft[arrWeft[0][i]] += x * y * z
+      }
+      for (let i = 0; i < arrWarpBack[0].length; i++) {
+        const x = arrWarpBack[1][i] ? arrWarpBack[1][i] : 1
+        const y = arrWarpBack[2][i] ? arrWarpBack[2][i] : 1
+        const z = arrWarpBack[3][i] ? arrWarpBack[3][i] : 1
+        this.colorNumber.warp[arrWarpBack[0][i]] = this.colorNumber.warp[arrWarpBack[0][i]] ? this.colorNumber.warp[arrWarpBack[0][i]] : 0
+        this.colorNumber.warp[arrWarpBack[0][i]] += x * y * z
+      }
+      for (let i = 0; i < arrWeftBack[0].length; i++) {
+        const x = arrWeftBack[1][i] ? arrWeftBack[1][i] : 1
+        const y = arrWeftBack[2][i] ? arrWeftBack[2][i] : 1
+        const z = arrWeftBack[3][i] ? arrWeftBack[3][i] : 1
+        this.colorNumber.weft[arrWeftBack[0][i]] = this.colorNumber.weft[arrWeftBack[0][i]] ? this.colorNumber.weft[arrWeftBack[0][i]] : 0
+        this.colorNumber.weft[arrWeftBack[0][i]] += x * y * z
+      }
+      this.warpInfo.material_data.forEach((item) => {
+        item.apply.forEach((itemChild) => {
+          this.colorWeight.warp[itemChild] = (this.colorNumber.warp[itemChild] * (this.weftInfo.neichang + this.weftInfo.rangwei) * data.yarn_coefficient.find((itemFind) => itemFind.name === item.material_name).value / 100).toFixed(1)
+        })
+      })
+      this.weftInfo.material_data.forEach((item) => {
+        item.apply.forEach((itemChild) => {
+          this.colorWeight.weft[itemChild] = (this.colorNumber.weft[itemChild] * (Number(this.weftCmp) === 1 ? this.warpInfo.reed_width : this.weftInfo.peifu) * data.yarn_coefficient.find((itemFind) => itemFind.name === item.material_name).value / 100).toFixed(1)
+        })
+      })
+      this.material.materialWarp.forEach((item) => {
+        item.apply = item.apply.map((index) => {
+          return {
+            number: index,
+            weight: item.number * (this.colorNumber.warp[index] * (this.weftInfo.neichang + this.weftInfo.rangwei) * data.yarn_coefficient.find((itemFind) => itemFind.name === item.material_name).value / 100).toFixed(1)
+          }
+        })
+      })
+      this.material.materialWeft.forEach((item) => {
+        item.apply = item.apply.map((index) => {
+          return {
+            number: index,
+            weight: item.number * (this.colorNumber.weft[index] * (Number(this.weftCmp) === 1 ? this.warpInfo.reed_width : this.weftInfo.peifu) * data.yarn_coefficient.find((itemFind) => itemFind.name === item.material_name).value / 100).toFixed(1)
+          }
+        })
+      })
+      this.colorWeight.warp.forEach((item) => {
+        this.weight += item === 'NaN' ? 0 : Number(item)
+      })
+      this.colorWeight.weft.forEach((item) => {
+        this.weight += item === 'NaN' ? 0 : Number(item)
+      })
+      this.material.materialWarp.forEach((item) => {
+        item.apply.forEach((itemApply) => {
+          this.weight += (Number(itemApply.weight) === 'NaN' ? 0 : Number(itemApply.weight))
+        })
+      })
+      this.material.materialWeft.forEach((item) => {
+        item.apply.forEach((itemApply) => {
+          this.weight += (Number(itemApply.weight) === 'NaN' ? 0 : Number(itemApply.weight))
+        })
+      })
+      this.weight = this.weight.toFixed(1)
+
+      this.canvasHeight = (this.weftInfo.neichang + this.weftInfo.rangwei) / (Number(this.weftCmp) === 1 ? this.warpInfo.reed_width : this.weftInfo.peifu) * 600 * 4
+      // 展平合并信息
+      let warpTable = this.getFlatTable(this.warpInfo.warp_rank, 'warpInfo', 'merge_data').map((item) => {
+        if (!item.GLorPM) {
+          item.GLorPM = 'Ⅰ'
+        }
+        return item
+      })
+      let weftTable = this.getFlatTable(this.weftInfo.weft_rank, 'weftInfo', 'merge_data').map((item) => {
+        if (!item.GLorPM) {
+          item.GLorPM = 'A'
+        }
+        return item
+      })
+      let warpTableBack = this.getFlatTable(this.warpInfo.warp_rank_back, 'warpInfo', 'merge_data_back').map((item) => {
+        if (!item.GLorPM) {
+          item.GLorPM = 'Ⅰ'
+        }
+        return item
+      })
+      let weftTableBack = this.getFlatTable(this.weftInfo.weft_rank_back, 'weftInfo', 'merge_data_back').map((item) => {
+        if (!item.GLorPM) {
+          item.GLorPM = 'A'
+        }
+        return item
+      })
+      // 将展开的合并信息结合穿综和纹版信息
+      let warpGetPMNum = []
+      let weftGetGLNum = []
+      let warpGetPMNumBack = []
+      let weftGetGLNumBack = []
+      warpTable.forEach((item) => {
+        let len = warpGetPMNum.length
+        if (len > 0) {
+          if (warpGetPMNum[len - 1].PM === item.GLorPM) {
+            warpGetPMNum[len - 1].number += parseInt(item.number)
+          } else {
+            warpGetPMNum.push({
+              PM: item.GLorPM,
+              number: parseInt(item.number)
+            })
+          }
+        } else {
+          warpGetPMNum.push({
+            PM: item.GLorPM,
+            number: parseInt(item.number)
+          })
+        }
+      })
+      weftTable.forEach((item) => {
+        let len = weftGetGLNum.length
+        if (len > 0) {
+          if (weftGetGLNum[len - 1].GL === item.GLorPM) {
+            weftGetGLNum[len - 1].number += parseInt(item.number)
+          } else {
+            weftGetGLNum.push({
+              GL: item.GLorPM,
+              number: parseInt(item.number)
+            })
+          }
+        } else {
+          weftGetGLNum.push({
+            GL: item.GLorPM,
+            number: parseInt(item.number)
+          })
+        }
+      })
+      warpTableBack.forEach((item) => {
+        let len = warpGetPMNumBack.length
+        if (len > 0) {
+          if (warpGetPMNumBack[len - 1].PM === item.GLorPM) {
+            warpGetPMNumBack[len - 1].number += parseInt(item.number)
+          } else {
+            warpGetPMNumBack.push({
+              PM: item.GLorPM,
+              number: parseInt(item.number)
+            })
+          }
+        } else {
+          warpGetPMNumBack.push({
+            PM: item.GLorPM,
+            number: parseInt(item.number)
+          })
+        }
+      })
+      weftTableBack.forEach((item) => {
+        let len = weftGetGLNumBack.length
+        if (len > 0) {
+          if (weftGetGLNumBack[len - 1].GL === item.GLorPM) {
+            weftGetGLNumBack[len - 1].number += parseInt(item.number)
+          } else {
+            weftGetGLNumBack.push({
+              GL: item.GLorPM,
+              number: parseInt(item.number)
+            })
+          }
+        } else {
+          weftGetGLNumBack.push({
+            GL: item.GLorPM,
+            number: parseInt(item.number)
+          })
+        }
+      })
+      let warpGetPM = []
+      let weftGetGL = []
+      let warpGetPMBack = []
+      let weftGetGLBack = []
+      warpGetPMNum.forEach((item) => {
+        // 高级穿综
+        if (this.PMFlag === 'complex') {
+          let PM = this.PM[this.romanNum.indexOf(item.PM)]
+          let PMFlatArr = []
+          PM.children.forEach((itemPM) => {
+            let PMVal = []
+            itemPM.children.forEach((itemChildren) => {
+              for (let i = 0; i < parseInt(itemChildren.repeat); i++) {
+                PMVal = PMVal.concat(itemChildren.value.split(','))
+              }
+            })
+            let times = parseInt(itemPM.number / PMVal.length) // 循环次数
+            let remainder = itemPM.number % PMVal.length // 取余数
+            for (let i = 0; i < times; i++) {
+              PMFlatArr = PMFlatArr.concat(PMVal)
+            }
+            PMFlatArr = PMFlatArr.concat(PMVal.filter((item, index) => index < remainder))
+          })
+          let times = parseInt(item.number / PMFlatArr.length)
+          let remainder = item.number % PMFlatArr.length
+          for (let i = 0; i < times; i++) {
+            warpGetPM = warpGetPM.concat(PMFlatArr)
+          }
+          warpGetPM = warpGetPM.concat(PMFlatArr.filter((item, index) => index < remainder))
+        } else {
+          // 穿综法普通逻辑
+          // let PM = this.PM[this.romanNum.indexOf(item.PM)]
+          // let PMArr = PM.value.split(',')
+          // let times = parseInt(item.number / PMArr.length)
+          // let remainder = PM.number % PMArr.length
+          // for (let i = 0; i < times; i++) {
+          //   warpGetPM = warpGetPM.concat(PMArr)
+          // }
+          // warpGetPM = warpGetPM.concat(PMArr.filter((item, index) => index < remainder))
+        }
+      })
+      // 穿综法普通逻辑独立
+      if (this.PMFlag === 'normal') {
+        this.PM.forEach((item) => {
+          let PMArr = item.value.split(',')
+          let times = parseInt(item.number / PMArr.length)
+          let remainder = item.number % PMArr.length
+          for (let i = 0; i < times; i++) {
+            warpGetPM = warpGetPM.concat(PMArr)
+          }
+          warpGetPM = warpGetPM.concat(PMArr.filter((item, index) => index < remainder))
+        })
+      }
+      weftGetGLNum.forEach((item) => {
+        let GL = this.mergeArray(this.GL[this.alphabet.indexOf(item.GL)]).filter((item) => item) // 剔除null
+        let times = parseInt(item.number / GL.length)
+        let remainder = item.number % GL.length
+        for (let i = 0; i < times; i++) {
+          weftGetGL = weftGetGL.concat(GL)
+        }
+        weftGetGL = weftGetGL.concat(GL.filter((item, index) => index < remainder))
+      })
+      warpGetPMNumBack.forEach((item) => {
+        // 高级穿综
+        if (this.PMFlag === 'complex') {
+          let PM = this.PM[this.romanNum.indexOf(item.PM)]
+          let PMFlatArr = []
+          PM.children.forEach((itemPM) => {
+            let PMVal = []
+            itemPM.children.forEach((itemChildren) => {
+              for (let i = 0; i < parseInt(itemChildren.repeat); i++) {
+                PMVal = PMVal.concat(itemChildren.value.split(','))
+              }
+            })
+            let times = parseInt(itemPM.number / PMVal.length) // 循环次数
+            let remainder = itemPM.number % PMVal.length // 取余数
+            for (let i = 0; i < times; i++) {
+              PMFlatArr = PMFlatArr.concat(PMVal)
+            }
+            PMFlatArr = PMFlatArr.concat(PMVal.filter((item, index) => index < remainder))
+          })
+          let times = parseInt(item.number / PMFlatArr.length)
+          let remainder = item.number % PMFlatArr.length
+          for (let i = 0; i < times; i++) {
+            warpGetPMBack = warpGetPMBack.concat(PMFlatArr)
+          }
+          warpGetPMBack = warpGetPMBack.concat(PMFlatArr.filter((item, index) => index < remainder))
+        } else {
+          // let PM = this.PM[this.romanNum.indexOf(item.PM)]
+          // let PMArr = PM.value.split(',')
+          // let times = parseInt(PM.number / PMArr.length)
+          // let remainder = item.number % PMArr.length
+          // for (let i = 0; i < times; i++) {
+          //   warpGetPMBack = warpGetPMBack.concat(PMArr)
+          // }
+          // warpGetPMBack = warpGetPMBack.concat(PMArr.filter((item, index) => index < remainder))
+        }
+      })
+      // 穿综法普通逻辑独立 -背面
+      if (this.PMFlag === 'normal') {
+        this.PM.forEach((item) => {
+          let PMArr = item.value.split(',')
+          let times = parseInt(item.number / PMArr.length)
+          let remainder = item.number % PMArr.length
+          for (let i = 0; i < times; i++) {
+            warpGetPMBack = warpGetPMBack.concat(PMArr)
+          }
+          warpGetPMBack = warpGetPMBack.concat(PMArr.filter((item, index) => index < remainder))
+        })
+      }
+      weftGetGLNumBack.forEach((item) => {
+        let GL = this.mergeArray(this.GL[this.alphabet.indexOf(item.GL)]).filter((item) => item) // 剔除null
+        let times = parseInt(item.number / GL.length)
+        let remainder = item.number % GL.length
+        for (let i = 0; i < times; i++) {
+          weftGetGLBack = weftGetGLBack.concat(GL)
+        }
+        weftGetGLBack = weftGetGLBack.concat(GL.filter((item, index) => index < remainder))
+      })
+      // 获取画图数据
+      let warpCanvas = []
+      let weftCanvas = []
+      let warpCanvasBack = []
+      let weftCanvasBack = []
+      warpTable.forEach((item) => {
+        for (let i = 0; i < item.number; i++) {
+          warpCanvas.push({
+            color: item.color,
+            PM: warpGetPM[warpCanvas.length]
+          })
+        }
+      })
+      weftTable.forEach((item) => {
+        for (let i = 0; i < item.number; i++) {
+          weftCanvas.push({
+            color: item.color,
+            GL: weftGetGL[weftCanvas.length]
+          })
+        }
+      })
+      warpTableBack.forEach((item) => {
+        for (let i = 0; i < item.number; i++) {
+          warpCanvasBack.push({
+            color: item.color,
+            PM: warpGetPMBack[warpCanvasBack.length]
+          })
+        }
+      })
+      weftTableBack.forEach((item) => {
+        for (let i = 0; i < item.number; i++) {
+          weftCanvasBack.push({
+            color: item.color,
+            GL: weftGetGLBack[weftCanvasBack.length]
+          })
+        }
+      })
+      // 保存下画图数据，方便在切换配色的时候使用
+      this.warpCanvas = warpCanvas
+      this.weftCanvas = weftCanvas
+      if (this.warpInfo.back_status === 1 && this.weftInfo.back_status === 1) {
+        this.warpCanvasBack = warpCanvasBack
+        this.weftCanvasBack = weftCanvasBack
+      } else if (this.warpInfo.back_status === 1 && this.weftInfo.back_status === 0) {
+        this.warpCanvasBack = warpCanvasBack
+        this.weftCanvasBack = weftCanvas
+      } else if (this.warpInfo.back_status === 0 && this.weftInfo.back_status === 1) {
+        this.warpCanvasBack = warpCanvas
+        this.weftCanvasBack = weftCanvasBack
+      }
+      console.log('init is complete')
+    },
+    deleteCraft () {
+      this.$confirm('此操作将永久删除该工艺单, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        craft.delete({
+          id: this.craftId
+        }).then((res) => {
+          if (res.data.status) {
+            this.$message.success('删除成功')
+            this.$router.go(-1)
+          }
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    }
+  },
+  mounted () {
+    craft.detail({
+      id: this.$route.params.id
+    }).then((res) => {
+      if (res.data.status !== false) {
+        this.data = res.data.data
+        this.init(res.data.data)
+        this.loading = false
+      }
+    })
+    getToken().then((res) => {
+      this.token = res.data.data
+    })
+  }
+}
+</script>
+
+<style lang="less" scoped>
+@import "~@/assets/less/craft/craftDetail.less";
+</style>
+<style lang="less">
+#craftDetail {
+  .GLCtn {
+    .el-input.is-disabled .el-input__inner {
+      height: 32px !important;
+      margin-bottom: 15px;
+    }
+  }
+  .el-input.is-disabled .el-input__inner {
+    color: rgba(0, 0, 0, 0.65);
+    background: #fff;
+    cursor: default;
+  }
+  .treeCtn {
+    .el-input__inner {
+      border: 0 !important;
+    }
+  }
+}
+</style>

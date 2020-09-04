@@ -1,0 +1,109 @@
+@import '../common.less';
+#craftList{
+  .flex06{
+    flex: 0.6;
+  }
+  .flex15{
+    flex: 1.5;
+  }
+  .cardModule{
+    .listCtn{
+      padding: 20px 0 0 0;
+      .filterCtn,
+      .list,
+      .pageCtn{
+        padding: 0 32px;
+      }
+      .pageCtn{
+        background-color: #F0F2F5;
+        padding-top: 0px;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+      }
+    }
+    .card_list{
+      background-color: #F0F2F5;
+      min-height: 628px;
+      display: flex;
+      flex-wrap: wrap;
+      padding-bottom: 24px;
+      .card_item{
+        width: calc((100% - (4 * 21px))/5);
+        height: 290px;
+        margin-right: 21px;
+        background-color: #FFF;
+        margin-top: 24px;
+        border-radius:4px 4px 0px 0px;
+        display: flex;
+        flex-direction: column;
+        &:nth-of-type(5n){
+          margin-right: 0;
+        }
+        .infoCtn{
+          height: 247px;
+          width: 100%;
+          position: relative;
+          overflow: hidden;
+          border-bottom: 1px solid rgba(0,0,0,0.1);
+          padding-bottom: 87px;
+          box-sizing: border-box;
+          .textCtn{
+            // transition: all 0.1s linear;
+            // position: absolute;
+            width: 100%;
+            height: 87px;
+            // bottom: 0;
+            // left: 0;
+            // transform: translateY(100%);
+            // background-color: rgba(255,255,255,0.6);
+            border-top: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 24px 25px 25px;
+            box-sizing: border-box;
+            justify-content: space-between;
+            .name{
+              color: @font85;
+              font-size: @fontBig;
+              font-weight: 600;
+            }
+            .text{
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              color: @font25;
+            }
+          }
+          // &:hover{
+          //   .textCtn{
+          //     transform: translateY(0);
+          //   }
+          // }
+        }
+        .oprCtn{
+          display: flex;
+          align-items: center;
+          flex: 1;
+          .opr{
+            flex: 1;
+            border-right: 2px dashed rgba(0,0,0,0.1);
+            text-align: center;
+            height: 1.2em;
+            color: @blue;
+            cursor: pointer;
+            &:last-of-type{
+              border-right: none;
+            }
+            &.orange{
+              color: @orange;
+            }
+            &.red{
+              color: @orange;
+            }
+          }
+        }
+      }
+    }
+  }
+}
