@@ -20,7 +20,9 @@
           </div>
         </div>
       </div>
-      <div class="print_body">
+      <div class="print_body"
+        style="display: flex;
+    flex-direction: column;">
         <div class="print_row">
           <span class="row_item w100 center">工艺单名称</span>
           <span class="row_item w180 left">
@@ -45,9 +47,9 @@
         </div>
         <!-- 中间图片，高度得自己去定义 -->
         <div class="print_row"
-          style="display:flex;justify-content: center;padding:20px 0">
+          style="display:flex;justify-content: center;padding:20px 0;flex:1;align-items:center">
           <div class="canvasCtn"
-            style="margin:20px;position:relative">
+            style="position:relative">
             <div class="mark"
               style="width: 0px;
                     height: 0px;
@@ -73,7 +75,8 @@
               src="" />
           </div>
           <div class="canvasCtn"
-            v-show="(warpInfo.back_status===1||weftInfo.back_status===1)">
+            v-show="(warpInfo.back_status===1||weftInfo.back_status===1)"
+            style="margin-left:20px;position:relative">
             <div class="mark"
               style="width: 0px;
                     height: 0px;
@@ -157,11 +160,6 @@ export default {
       size_info: '',
       qrCodeUrl: '',
       craftDetail: {
-        product_info: {
-          category_info: {},
-          size: [],
-          materials: []
-        },
         draft_method: {
           GL: []
         }

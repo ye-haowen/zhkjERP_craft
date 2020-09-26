@@ -19,11 +19,6 @@
           </span>
         </div>
         <div class="right">
-          <!-- <span class="qrCode_box"
-            style="margin-right:16px"
-            v-if="craftDetail.product_info.img.length>0">
-            <img :src="craftDetail.product_info.img[0].image_url" />
-          </span> -->
           <span class="text">
             扫一扫
             <br />
@@ -407,7 +402,7 @@
       v-if="warp_data.length_is >= 17 || weft_data.length_is >= 17  || warp_data.back_status || weft_data.back_status">
       <div class="outItem">
         <span class="label">工艺单编号：</span>
-        {{craftDetail.product_info.product_code}}
+        {{craftDetail.craft_code}}
       </div>
       <div class="outItem">
         <span class="label">经向排列-正：</span>
@@ -701,7 +696,7 @@
       v-if="zhujia_info.length >= 7 || color_data.length >= 5">
       <div class="outItem">
         <span class="label">工艺单编号：</span>
-        {{craftDetail.product_info.product_code}}
+        {{craftDetail.craft_code}}
       </div>
       <div class="outItem">
         <span class="label">配色方案：</span>
@@ -777,7 +772,7 @@
       v-if="craftDetail.draft_method.GLFlag !== 'normal' || 5 < craftDetail.draft_method.GL[0].length">
       <div class="outItem">
         <span class="label">工艺单编号：</span>
-        {{craftDetail.product_info.product_code}}
+        {{craftDetail.craft_code}}
       </div>
       <div class="outItem">
         <span class="label">穿综法循环：</span>
@@ -828,12 +823,6 @@ export default {
       company_name: window.sessionStorage.getItem('company_name'),
       qrCodeUrl: '',
       craftDetail: {
-        product_info: {
-          category_info: {},
-          size: [],
-          materials: [],
-          img: []
-        },
         draft_method: {
           GL: [],
           GLShow: [],

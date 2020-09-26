@@ -514,6 +514,57 @@
           &.right{
             justify-content: flex-end;
           }
+          .stateCtn{
+            margin-right: 8px;
+            display: flex;
+            flex-direction: column;
+            &.rowFlex{
+              flex-direction: row;
+              .state{
+                margin-right: 8px;
+                margin-top: 7px;
+              }
+            }
+            &.blue{
+              .state{
+                background:@blue;
+              }
+              .name{
+                color: @blue;
+              }
+            }
+            &.red{
+              .state{
+                background:@red;
+              }
+              .name{
+                color: @red;
+              }
+            }
+            &.orange{
+              .state{
+                background:@orange;
+              }
+              .name{
+                color: @orange;
+              }
+            }
+            &.green{
+              .state{
+                background:#01B48C ;
+              }
+              .name{
+                color: #01B48C;
+              }
+            }
+            .state{
+              width:6px;
+              height:6px;
+              border-radius: 50%;
+              background: #ccc;
+              margin:5px auto;
+            }
+          }
           .opr{
             color:@blue;
             padding: 0 8px;
